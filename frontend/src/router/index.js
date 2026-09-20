@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/auth'
 import LoginView from '../views/LoginView.vue'
 import RunListView from '../views/RunListView.vue'
 import RunCreateView from '../views/RunCreateView.vue'
+import BatchCompleteView from '../views/BatchCompleteView.vue'
 import RunDetailView from '../views/RunDetailView.vue'
 import EventTimelineView from '../views/EventTimelineView.vue'
 import LineageView from '../views/LineageView.vue'
@@ -14,6 +15,7 @@ const router = createRouter({
     { path: '/', redirect: '/runs' },
     { path: '/runs', name: 'runs', component: RunListView },
     { path: '/runs/new', name: 'run-create', component: RunCreateView, meta: { researcher: true } },
+    { path: '/runs/batch-complete', name: 'run-batch-complete', component: BatchCompleteView, meta: { researcher: true } },
     { path: '/runs/:id', name: 'run-detail', component: RunDetailView },
     { path: '/runs/:id/events', name: 'run-events', component: EventTimelineView },
     { path: '/runs/:id/lineage', name: 'run-lineage', component: LineageView },

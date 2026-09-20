@@ -2,9 +2,6 @@ import hashlib
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.cqrs import (
     ConflictError,
@@ -17,39 +14,11 @@ from app.cqrs import (
     record_metric,
     start_run,
 )
-from app.database import Base
 from app.models import RunProjection
 
 
 def sha(s: str) -> str:
     return hashlib.sha256(s.encode()).hexdigest()
-
-
-@pytest.fixture()
-def db():
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    # JSONB not available on SQLite — remap via create_all with JSON
-    from sqlalchemy import JSON
-    from sqlalchemy.dialects.postgresql import JSONB
-
-    # For SQLite tests, compile JSONB as JSON
-    from sqlalchemy.ext.compiler import compiles
-
-    @compiles(JSONB, "sqlite")
-    def _compile_jsonb_sqlite(_type, compiler, **kw):
-        return "JSON"
-
-    Base.metadata.create_all(bind=engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    try:
-        yield session
-    finally:
-        session.close()
 
 
 def test_start_and_complete_happy_path(db):

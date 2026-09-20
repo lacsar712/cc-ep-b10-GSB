@@ -34,6 +34,11 @@ class CompleteRunCommand(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class BatchCompleteCommand(BaseModel):
+    run_ids: list[UUID] = Field(min_length=1, max_length=200)
+    result_summary: str = Field(min_length=1, max_length=2000)
+
+
 class AbortRunCommand(BaseModel):
     reason: str = Field(min_length=1, max_length=2000)
     expected_version: int = Field(ge=1)
@@ -81,6 +86,17 @@ class EventOut(BaseModel):
     actor: str
 
     model_config = {"from_attributes": True}
+
+
+class BatchCompleteItemResult(BaseModel):
+    run_id: UUID
+    status: str  # "completed" | "skipped" | "failed"
+    reason: str | None = None
+    run: RunOut | None = None
+
+
+class BatchCompleteResponse(BaseModel):
+    results: list[BatchCompleteItemResult]
 
 
 class LineageOut(BaseModel):

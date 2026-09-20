@@ -300,6 +300,80 @@ def abort_run(
     return proj
 
 
+def batch_complete_runs(
+    db: Session,
+    *,
+    actor: str,
+    run_ids: list[UUID],
+    result_summary: str,
+) -> list[dict[str, Any]]:
+    """Complete runs one by one; a single failure never cancels the rest.
+
+    Each item resolves to:
+    - completed: RunCompleted event appended, projection updated
+    - skipped:   run is terminal or 材料未齐 (missing metrics/artifacts)
+    - failed:    run missing or a domain/conflict error was raised
+    """
+    results: list[dict[str, Any]] = []
+    for run_id in run_ids:
+        proj = _get_projection(db, run_id)
+        if proj is None:
+            results.append(
+                {"run_id": run_id, "status": "failed", "reason": "Run 不存在", "run": None}
+            )
+            continue
+        if proj.status in TERMINAL_STATUSES:
+            results.append(
+                {
+                    "run_id": run_id,
+                    "status": "skipped",
+                    "reason": "Run 已处于终态，不可再接受命令",
+                    "run": proj,
+                }
+            )
+            continue
+        if proj.status != "running":
+            results.append(
+                {
+                    "run_id": run_id,
+                    "status": "skipped",
+                    "reason": f"当前状态 {proj.status} 不允许完成",
+                    "run": proj,
+                }
+            )
+            continue
+        missing = []
+        if not proj.metrics_json:
+            missing.append("指标")
+        if not proj.artifacts_json:
+            missing.append("产物")
+        if missing:
+            results.append(
+                {
+                    "run_id": run_id,
+                    "status": "skipped",
+                    "reason": f"材料未齐：缺少{'与'.join(missing)}",
+                    "run": proj,
+                }
+            )
+            continue
+        try:
+            updated = complete_run(
+                db,
+                run_id=run_id,
+                actor=actor,
+                result_summary=result_summary,
+                expected_version=proj.version,
+            )
+        except DomainError as exc:
+            results.append(
+                {"run_id": run_id, "status": "failed", "reason": exc.message, "run": None}
+            )
+            continue
+        results.append({"run_id": run_id, "status": "completed", "reason": None, "run": updated})
+    return results
+
+
 def list_events(db: Session, run_id: UUID) -> list[EventStore]:
     stmt = (
         select(EventStore)

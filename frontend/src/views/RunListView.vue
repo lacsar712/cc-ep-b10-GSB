@@ -5,9 +5,10 @@
         <h1 style="margin-bottom: 4px">实验 Run 列表</h1>
         <p class="muted" style="margin-top: 0">按项目与状态筛选投影视图</p>
       </div>
-      <n-button v-if="auth.role === 'researcher'" type="primary" @click="$router.push('/runs/new')">
-        新建 Run
-      </n-button>
+      <div v-if="auth.role === 'researcher'" style="display: flex; gap: 8px">
+        <n-button @click="$router.push('/runs/batch-complete')">批量完成</n-button>
+        <n-button type="primary" @click="$router.push('/runs/new')">新建 Run</n-button>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom: 16px">

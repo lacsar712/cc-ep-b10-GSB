@@ -124,7 +124,7 @@ def seed() -> None:
             expected_version=run2.version,
         )
 
-        # Running run 3
+        # Running run 3 (材料未齐：只有指标，没有产物)
         run3 = start_run(
             db,
             actor="researcher",
@@ -145,7 +145,69 @@ def seed() -> None:
             expected_version=run3.version,
         )
 
-        print("Seed completed: 2 completed runs + 1 running run")
+        # Running run 4（材料已齐：指标 + 产物，可批量完成）
+        run4 = start_run(
+            db,
+            actor="researcher",
+            project="drug-screen",
+            name="Docking rescoring batch #7",
+            dataset_content_sha256=sha256_hex("docking-lib-v3"),
+            code_commit_sha="7f6e5d4c3b2a1908778695a4b3c2d1e0f1234567",
+            description="进行中：重打分批次，指标与产物已齐",
+            run_id=UUID("44444444-4444-4444-4444-444444444444"),
+        )
+        run4 = record_metric(
+            db,
+            run_id=run4.id,
+            actor="researcher",
+            name="mean_affinity",
+            value=-9.4,
+            step=1,
+            expected_version=run4.version,
+        )
+        attach_artifact(
+            db,
+            run_id=run4.id,
+            actor="researcher",
+            name="poses.sdf",
+            uri="s3://lab-artifacts/drug-screen/run7/poses.sdf",
+            content_sha256=sha256_hex("poses-sdf-run7"),
+            media_type="chemical/x-mdl-sdfile",
+            expected_version=run4.version,
+        )
+
+        # Running run 5（材料已齐：指标 + 产物，可批量完成）
+        run5 = start_run(
+            db,
+            actor="researcher",
+            project="protein-folding",
+            name="Distillation student v2",
+            dataset_content_sha256=sha256_hex("casp14-distill-v2"),
+            code_commit_sha="1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+            description="进行中：蒸馏学生模型，指标与产物已齐",
+            run_id=UUID("55555555-5555-5555-5555-555555555555"),
+        )
+        run5 = record_metric(
+            db,
+            run_id=run5.id,
+            actor="researcher",
+            name="tm_score",
+            value=0.77,
+            step=3,
+            expected_version=run5.version,
+        )
+        attach_artifact(
+            db,
+            run_id=run5.id,
+            actor="researcher",
+            name="student.pt",
+            uri="s3://lab-artifacts/protein-folding/run5/student.pt",
+            content_sha256=sha256_hex("student-pt-run5"),
+            media_type="application/octet-stream",
+            expected_version=run5.version,
+        )
+
+        print("Seed completed: 2 completed runs + 3 running runs (2 材料已齐)")
     finally:
         db.close()
 
