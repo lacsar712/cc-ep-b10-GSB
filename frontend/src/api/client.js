@@ -62,6 +62,11 @@ export async function completeRun(id, body) {
   return data
 }
 
+export async function batchCompleteRuns(body) {
+  const { data } = await api.post('/runs/batch-complete', body)
+  return data
+}
+
 export async function abortRun(id, body) {
   const { data } = await api.post(`/runs/${id}/abort`, body)
   return data

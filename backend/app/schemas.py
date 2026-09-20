@@ -39,6 +39,24 @@ class AbortRunCommand(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class BatchCompleteRunsCommand(BaseModel):
+    run_ids: list[UUID] = Field(min_length=1, max_length=200)
+    result_summary: str = Field(min_length=1, max_length=2000)
+
+
+class BatchCompleteItemOut(BaseModel):
+    run_id: UUID
+    name: str | None
+    outcome: str  # success / skipped / failed
+    reason: str | None = None
+    version: int | None = None
+    status: str | None = None
+
+
+class BatchCompleteRunsResponse(BaseModel):
+    results: list[BatchCompleteItemOut]
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str

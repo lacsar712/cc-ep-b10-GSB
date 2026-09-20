@@ -10,6 +10,7 @@ from app.cqrs import (
     DomainError,
     abort_run,
     attach_artifact,
+    batch_complete_runs,
     complete_run,
     list_events,
     record_metric,
@@ -20,6 +21,8 @@ from app.models import RunProjection
 from app.schemas import (
     AbortRunCommand,
     AttachArtifactCommand,
+    BatchCompleteRunsCommand,
+    BatchCompleteRunsResponse,
     CompleteRunCommand,
     EventOut,
     LineageOut,
@@ -89,6 +92,21 @@ def create_run(
         )
     except DomainError as exc:
         _handle_domain(exc)
+
+
+@router.post("/runs/batch-complete", response_model=BatchCompleteRunsResponse)
+def post_batch_complete(
+    body: BatchCompleteRunsCommand,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_researcher),
+):
+    results = batch_complete_runs(
+        db,
+        actor=user["username"],
+        run_ids=body.run_ids,
+        result_summary=body.result_summary,
+    )
+    return BatchCompleteRunsResponse(results=results)
 
 
 @router.get("/runs/{run_id}", response_model=RunOut)

@@ -145,7 +145,69 @@ def seed() -> None:
             expected_version=run3.version,
         )
 
-        print("Seed completed: 2 completed runs + 1 running run")
+        # Running run 4 — materials ready (metric + artifact), batch-completable
+        run4 = start_run(
+            db,
+            actor="researcher",
+            project="drug-screen",
+            name="Docking ensemble rerun #7",
+            dataset_content_sha256=sha256_hex("docking-lib-v3"),
+            code_commit_sha="77aa88bb99cc00dd11ee22ff33445566778899aa",
+            description="材料已齐，等待批量完成",
+            run_id=UUID("44444444-4444-4444-4444-444444444444"),
+        )
+        run4 = record_metric(
+            db,
+            run_id=run4.id,
+            actor="researcher",
+            name="auc",
+            value=0.87,
+            step=1,
+            expected_version=run4.version,
+        )
+        attach_artifact(
+            db,
+            run_id=run4.id,
+            actor="researcher",
+            name="poses.sdf",
+            uri="s3://lab-artifacts/drug-screen/run7/poses.sdf",
+            content_sha256=sha256_hex("poses-sdf-run7"),
+            media_type="chemical/x-mdl-sdfile",
+            expected_version=run4.version,
+        )
+
+        # Running run 5 — materials ready (metric + artifact), batch-completable
+        run5 = start_run(
+            db,
+            actor="researcher",
+            project="protein-folding",
+            name="Distillation student v2",
+            dataset_content_sha256=sha256_hex("casp14-distill-v2"),
+            code_commit_sha="12cd34ef56ab78cd90ef12ab34cd56ef78ab90cd",
+            description="材料已齐，等待批量完成",
+            run_id=UUID("55555555-5555-5555-5555-555555555555"),
+        )
+        run5 = record_metric(
+            db,
+            run_id=run5.id,
+            actor="researcher",
+            name="tm_score",
+            value=0.66,
+            step=1,
+            expected_version=run5.version,
+        )
+        attach_artifact(
+            db,
+            run_id=run5.id,
+            actor="researcher",
+            name="student.pt",
+            uri="s3://lab-artifacts/protein-folding/student-v2/student.pt",
+            content_sha256=sha256_hex("student-pt-v2"),
+            media_type="application/octet-stream",
+            expected_version=run5.version,
+        )
+
+        print("Seed completed: 2 completed runs + 3 running runs (2 batch-ready)")
     finally:
         db.close()
 

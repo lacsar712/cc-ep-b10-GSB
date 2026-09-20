@@ -15,7 +15,7 @@ docker compose up --build
 
 1. 拉起 PostgreSQL
 2. 启动 FastAPI 后端并建表
-3. `seed` 写入 2 条已完成 Run + 1 条进行中 Run
+3. `seed` 写入 2 条已完成 Run + 3 条进行中 Run（其中 2 条材料已齐，可批量完成）
 4. 构建并启动前端（nginx）
 
 停止：
@@ -63,13 +63,14 @@ pytest -q
 5. 打开「事件时间线」确认 version 递增的原始事件
 6. 打开「血缘」确认 code_commit、dataset 指纹、artifacts、metrics
 7. 健康检查：`GET http://localhost:8173/api/health`
-8. 用 `auditor` 登录：可看列表/事件/血缘，命令按钮不可用
+8. 用 `auditor` 登录：可看列表/事件/血缘，命令按钮不可用，也进不了「批量完成」页（直调 `POST /api/runs/batch-complete` 返回 403）
+9. 用 `researcher` 打开「批量完成」：列表标明每条是否已有指标/产物；勾选 2 条材料已齐的进行中 Run 提交后，逐行显示成功/跳过/失败原因，单条失败不影响后续，成功行状态变为已完成（与详情页一致）
 
 终态或 `expected_version` 不匹配时，API 返回 **409**。
 
 ## 架构要点
 
-- **命令**：`StartRun` / `RecordMetric` / `AttachArtifact` / `CompleteRun` / `AbortRun`
+- **命令**：`StartRun` / `RecordMetric` / `AttachArtifact` / `CompleteRun` / `AbortRun`（另有 `POST /api/runs/batch-complete` 批量完成：逐条执行，材料未齐或已终态跳过，单条失败不取消后续）
 - **事件**：`RunStarted` / `MetricRecorded` / `ArtifactAttached` / `RunCompleted` / `RunAborted`
 - **event_store**：`(aggregate_id, version)` 唯一；冲突 → 409
 - **run_projections**：查询侧投影（状态、指标、产物等）
